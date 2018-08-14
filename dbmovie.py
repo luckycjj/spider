@@ -7,24 +7,26 @@ import requests
 from bs4 import BeautifulSoup
 
 
-resp=requests.get('https://movie.douban.com/j/search_tags?type=movie&tag=&source=') #请求网页首页
+resp=requests.post('http://www.haoyunhu56.com/entrustOrder/getBigType') #请求网页首页
 bsobj = BeautifulSoup(resp.content,'lxml') #将网页源码构造成BeautifulSoup对象，方便操作
-p = json.loads(bsobj.find('p').get_text())['tags']
+p = json.loads(bsobj.find('p').get_text())['goodsHistory']
 text = ""
 goodmovie = ""
 badmoive = ""
 for i in p:
-    text += '\n' + u'类别：' + i + '\n\n'
-    re = requests.get('https://movie.douban.com/j/search_subjects?type=movie&tag='+i+'&sort=time&page_limit=20&page_start=0')
+    text += '\n\n\n\n' + u'品种：' + i['typeName'] + '('+i['typeNameId']+')'
+    re = requests.post('http://www.haoyunhu56.com/entrustOrder/getBigVarieties?typeNameId='+ i['typeNameId'])
     bs = BeautifulSoup(re.content,'lxml')
-    movie = json.loads(bs.find('p').get_text())['subjects']
+    movie = json.loads(bs.find('p').get_text())['goodsHistory']
     for j in movie:
-        text += j['title'] + u':' + str(j['rate']) + u'分' + '\n'
-        if float(j['rate']) - 8 >=0:
-            goodmovie += j['title']+"("+j['rate']+")" + ", "
-        elif float(j['rate']) - 4 <=0:
-            badmoive += j['title']+"("+j['rate']+")" + ", "
+        text += '\n\n' + u'大类：' + j['varieties'] + '('+j['varietiesId']+')'
+        rex = requests.post('http://www.haoyunhu56.com/entrustOrder/getBigProductName?varietiesId=' + j['varietiesId'])
+        bsx = BeautifulSoup(rex.content, 'lxml')
+        moviex = json.loads(bsx.find('p').get_text())['goodsHistory']
+        for x in moviex:
+            text += '\n' + u'品名：' + x['productName'] + '(' + x['productNameId'] + ')'
+
 
 
 with open('movie.txt','w') as f: #在当前路径下，以写的方式打开一个名为'haoyun.txt'，如果不存在则创建
-    f.write(text + u"\n高分电影：" + goodmovie + u"\n垃圾电影：" + badmoive) #将text里的数据写入到文本中
+    f.write(text) #将text里的数据写
